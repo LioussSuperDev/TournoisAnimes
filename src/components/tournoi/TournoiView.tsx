@@ -62,7 +62,9 @@ export function TournoiView({
   } else {
     switch (view.duel.phase) {
       case "viewing":
-        content = <ViewingPhase view={view} canEditColors={canEditColors} onChanged={refresh} />;
+        content = (
+          <ViewingPhase view={view} canEditColors={canEditColors} isAdmin={isAdmin} onChanged={refresh} />
+        );
         break;
       case "voting":
       case "powers_validation":

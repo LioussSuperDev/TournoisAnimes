@@ -79,8 +79,13 @@ export function DuelsPanel({
   }
 
   async function remove(id: string) {
-    if (!confirm("Supprimer ce duel ?")) return;
-    await fetch(`/api/admin/duels/${id}`, { method: "DELETE" });
+    if (!confirm("Supprimer ce duel ? (votes, pouvoirs et roue associés seront aussi supprimés)")) return;
+    const res = await fetch(`/api/admin/duels/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error ?? "Suppression impossible.");
+      return;
+    }
     onChanged();
   }
 
@@ -154,6 +159,11 @@ export function DuelsPanel({
               <span>
                 <strong>{groupById[d.groupId]?.name}</strong> — {endingById[d.endingAId]?.name} vs{" "}
                 {endingById[d.endingBId]?.name}
+                {d.status === "completed" && (
+                  <span className="ml-2 text-success">
+                    🏆 {d.winnerEndingId ? endingById[d.winnerEndingId]?.name : "?"}
+                  </span>
+                )}
               </span>
               <div className="flex items-center gap-2">
                 <span

@@ -100,7 +100,7 @@ export const votes = sqliteTable(
     id: id(),
     duelId: text("duel_id")
       .notNull()
-      .references(() => duels.id),
+      .references(() => duels.id, { onDelete: "cascade" }),
     userId: text("user_id")
       .notNull()
       .references(() => users.id),
@@ -121,7 +121,7 @@ export const powerUsages = sqliteTable("power_usages", {
   id: id(),
   duelId: text("duel_id")
     .notNull()
-    .references(() => duels.id),
+    .references(() => duels.id, { onDelete: "cascade" }),
   userId: text("user_id")
     .notNull()
     .references(() => users.id),
@@ -138,7 +138,7 @@ export const wheelSpins = sqliteTable("wheel_spins", {
   id: id(),
   duelId: text("duel_id")
     .notNull()
-    .references(() => duels.id),
+    .references(() => duels.id, { onDelete: "cascade" }),
   segmentsJson: text("segments_json").notNull(),
   winnerSegmentIndex: integer("winner_segment_index").notNull(),
   winnerEndingId: text("winner_ending_id")
@@ -161,7 +161,7 @@ export const loserBracketEntries = sqliteTable("loser_bracket_entries", {
   youtubeUrl: text("youtube_url").notNull(),
   duelId: text("duel_id")
     .notNull()
-    .references(() => duels.id),
+    .references(() => duels.id, { onDelete: "cascade" }),
   createdAt: createdAt(),
 });
 

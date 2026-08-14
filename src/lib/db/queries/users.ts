@@ -19,6 +19,15 @@ export function listUsers() {
   return db.select().from(users).orderBy(users.createdAt).all();
 }
 
+export async function updateUserPasswordHash(id: string, passwordHash: string) {
+  const [user] = await db
+    .update(users)
+    .set({ passwordHash })
+    .where(eq(users.id, id))
+    .returning();
+  return user;
+}
+
 export async function createUser(username: string, passwordHash: string) {
   const usernameLower = username.trim().toLowerCase();
   const role = usernameLower === "serkcan" ? "admin" : "player";

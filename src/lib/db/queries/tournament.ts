@@ -1,6 +1,7 @@
 import { and, desc, eq, ne } from "drizzle-orm";
 import { db } from "../client";
 import { duels, endings, groups, type DuelPhase, type ViewingStage } from "../schema";
+import { resetDuelPlaythrough } from "@/lib/duel/reset";
 
 export function listGroups() {
   return db.select().from(groups).orderBy(groups.orderIndex).all();
@@ -93,9 +94,14 @@ export async function setActiveDuel(id: string) {
     .update(duels)
     .set({ status: "pending" })
     .where(and(eq(duels.status, "active"), ne(duels.id, id)));
+  // (Re)activating always starts fresh: wipes any votes/pouvoirs/roue/Loser
+  // Bracket entries left over from a previous playthrough of this exact
+  // duel and refunds the powers they consumed. No-op the first time a duel
+  // is activated, since there's nothing to wipe yet.
+  await resetDuelPlaythrough(id);
   const [duel] = await db
     .update(duels)
-    .set({ status: "active", phase: "viewing", viewingStage: "a" })
+    .set({ status: "active", phase: "viewing", viewingStage: "a", winnerEndingId: null })
     .where(eq(duels.id, id))
     .returning();
   return duel;

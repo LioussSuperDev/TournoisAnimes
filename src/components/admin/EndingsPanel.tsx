@@ -34,7 +34,12 @@ export function EndingsPanel({
 
   async function remove(id: string) {
     if (!confirm("Supprimer cet ending ?")) return;
-    await fetch(`/api/admin/endings/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/admin/endings/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error ?? "Suppression impossible.");
+      return;
+    }
     onChanged();
   }
 

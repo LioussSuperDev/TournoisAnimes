@@ -33,6 +33,10 @@ export async function cancelVote(duelId: string, userId: string) {
   await db.delete(votes).where(and(eq(votes.duelId, duelId), eq(votes.userId, userId)));
 }
 
+export async function deleteVotesForDuel(duelId: string) {
+  await db.delete(votes).where(eq(votes.duelId, duelId));
+}
+
 export async function setVoteValidated(duelId: string, userId: string, validated: boolean) {
   const existing = await getVote(duelId, userId);
   if (!existing) return null;

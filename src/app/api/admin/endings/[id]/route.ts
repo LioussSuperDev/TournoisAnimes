@@ -34,7 +34,14 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   if ("error" in auth) return auth.error;
 
   const { id } = await params;
-  await deleteEnding(id);
+  try {
+    await deleteEnding(id);
+  } catch {
+    return NextResponse.json(
+      { error: "Cet ending est encore utilisé par un duel — supprime le duel d'abord." },
+      { status: 409 }
+    );
+  }
   await logAction(auth.user.id, "admin.ending.delete", { endingId: id });
   pingTournament();
   return NextResponse.json({ ok: true });

@@ -28,7 +28,12 @@ export function GroupsPanel({
 
   async function remove(id: string) {
     if (!confirm("Supprimer ce groupe ? (les endings/duels associés doivent être supprimés avant)")) return;
-    await fetch(`/api/admin/groups/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/admin/groups/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error ?? "Suppression impossible : ce groupe a encore des endings ou des duels.");
+      return;
+    }
     onChanged();
   }
 

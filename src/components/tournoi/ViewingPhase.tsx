@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import YouTube from "react-youtube";
 import { extractYoutubeId } from "@/lib/youtube";
 import type { PlayerDuelView } from "@/lib/duel/viewTypes";
@@ -11,18 +11,58 @@ const STAGE_LABEL: Record<string, string> = {
   free: "Visionnage libre",
 };
 
+type VideoState = NonNullable<PlayerDuelView["duel"]>["videoState"];
+
+interface YTPlayerLike {
+  playVideo(): void;
+  pauseVideo(): void;
+  seekTo(seconds: number, allowSeekAhead?: boolean): void;
+  getCurrentTime(): Promise<number>;
+  getPlayerState(): Promise<number>;
+}
+
 export function ViewingPhase({
   view,
   canEditColors,
+  isAdmin,
   onChanged,
 }: {
   view: PlayerDuelView;
   canEditColors: boolean;
+  isAdmin: boolean;
   onChanged: () => void;
 }) {
   const { duel } = view;
   const stage = duel?.viewingStage ?? "a";
   const [freeChoice, setFreeChoice] = useState<"A" | "B">(stage === "b" ? "B" : "A");
+
+  const playerRef = useRef<YTPlayerLike | null>(null);
+  const appliedAtRef = useRef<number | null>(null);
+  const videoState: VideoState = duel?.videoState ?? null;
+  const latestVideoStateRef = useRef(videoState);
+  useEffect(() => {
+    latestVideoStateRef.current = videoState;
+  }, [videoState]);
+
+  function applyVideoState(state: VideoState) {
+    const player = playerRef.current;
+    if (!player || !state) return;
+    if (appliedAtRef.current === state.updatedAt) return;
+    appliedAtRef.current = state.updatedAt;
+    const projected = state.isPlaying
+      ? state.positionSeconds + (Date.now() - state.updatedAt) / 1000
+      : state.positionSeconds;
+    player.seekTo(Math.max(0, projected), true);
+    if (state.isPlaying) player.playVideo();
+    else player.pauseVideo();
+  }
+
+  // Re-applies on every refetch, but applyVideoState() itself no-ops
+  // unless the command's `updatedAt` actually changed — so unrelated
+  // refetches that return the same command don't re-trigger a seek.
+  useEffect(() => {
+    applyVideoState(videoState);
+  }, [videoState]);
 
   if (!duel) return null;
 
@@ -30,6 +70,7 @@ export function ViewingPhase({
   const activeEnding: "A" | "B" = locked ? (stage === "b" ? "B" : "A") : freeChoice;
   const ending = activeEnding === "A" ? duel.endingA : duel.endingB;
   const videoId = ending ? extractYoutubeId(ending.youtubeUrl) : null;
+  const canSync = isAdmin && locked;
 
   async function setColor(endingId: string, color: string) {
     if (!duel) return;
@@ -37,6 +78,30 @@ export function ViewingPhase({
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ endingId, color }),
+    });
+    onChanged();
+  }
+
+  async function sendVideoState(isPlaying: boolean) {
+    const player = playerRef.current;
+    if (!player || !duel) return;
+    const time = await player.getCurrentTime();
+    await fetch(`/api/admin/duels/${duel.id}/video`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isPlaying, positionSeconds: time || 0 }),
+    });
+    onChanged();
+  }
+
+  async function resync() {
+    const player = playerRef.current;
+    if (!player || !duel) return;
+    const [time, state] = await Promise.all([player.getCurrentTime(), player.getPlayerState()]);
+    await fetch(`/api/admin/duels/${duel.id}/video`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isPlaying: state === 1, positionSeconds: time || 0 }),
     });
     onChanged();
   }
@@ -93,6 +158,10 @@ export function ViewingPhase({
             opts={{ width: "100%", height: "100%", playerVars: { autoplay: 0 } }}
             className="w-full h-full"
             iframeClassName="w-full h-full"
+            onReady={(event) => {
+              playerRef.current = event.target as unknown as YTPlayerLike;
+              applyVideoState(latestVideoStateRef.current);
+            }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted">
@@ -100,6 +169,32 @@ export function ViewingPhase({
           </div>
         )}
       </div>
+
+      {canSync && (
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] uppercase tracking-wide text-accent-2 mr-1">
+            Contrôle admin
+          </span>
+          <button
+            onClick={() => sendVideoState(true)}
+            className="rounded-lg px-3 py-1.5 text-sm border border-success text-success hover:bg-success hover:text-black"
+          >
+            ▶ Lecture
+          </button>
+          <button
+            onClick={() => sendVideoState(false)}
+            className="rounded-lg px-3 py-1.5 text-sm border border-border text-muted hover:text-foreground"
+          >
+            ⏸ Pause
+          </button>
+          <button
+            onClick={resync}
+            className="rounded-lg px-3 py-1.5 text-sm border border-accent-2 text-accent-2 hover:bg-accent-2 hover:text-black"
+          >
+            🔄 Resynchroniser
+          </button>
+        </div>
+      )}
 
       <p className="text-muted text-sm">
         {locked

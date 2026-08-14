@@ -26,7 +26,7 @@ export function WheelResultPhase({ view, onChanged }: { view: PlayerDuelView; on
   const segmentDisplays = wheel.segments.map((s) => ({
     endingId: s.endingId,
     label: endingsById[s.endingId]?.name ?? "?",
-    color: endingsById[s.endingId]?.color ?? "#888888",
+    color: s.color,
   }));
 
   const winnerEnding = endingsById[wheel.winnerEndingId];

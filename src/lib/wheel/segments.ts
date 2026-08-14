@@ -6,6 +6,40 @@ export interface WheelSegment {
   ownerId: string;
   endingId: string;
   source: "base" | "double" | "boost";
+  color: string;
+}
+
+// Vivid, mutually distinct hues — picked (not fully random RGB) so the
+// wheel never lands on a muddy or low-contrast color. Reshuffled on every
+// spin so segments get new colors each launch, independent of the fixed
+// per-ending color used elsewhere (vote buttons, ending labels).
+const SEGMENT_COLOR_PALETTE = [
+  "#ef4444",
+  "#f97316",
+  "#f59e0b",
+  "#eab308",
+  "#84cc16",
+  "#22c55e",
+  "#10b981",
+  "#14b8a6",
+  "#06b6d4",
+  "#0ea5e9",
+  "#3b82f6",
+  "#6366f1",
+  "#8b5cf6",
+  "#a855f7",
+  "#d946ef",
+  "#ec4899",
+  "#f43f5e",
+];
+
+function shuffledSegmentColors(): string[] {
+  const arr = [...SEGMENT_COLOR_PALETTE];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = randomInt(i + 1);
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
 }
 
 /**
@@ -20,7 +54,7 @@ export async function buildSegments(duelId: string): Promise<WheelSegment[]> {
     listUsagesForDuel(duelId),
   ]);
 
-  const segments: WheelSegment[] = [];
+  const segments: Omit<WheelSegment, "color">[] = [];
 
   for (const vote of duelVotes) {
     if (!vote.validated) continue;
@@ -47,7 +81,8 @@ export async function buildSegments(duelId: string): Promise<WheelSegment[]> {
     if (idx !== -1) segments.splice(idx, 1);
   }
 
-  return segments;
+  const colors = shuffledSegmentColors();
+  return segments.map((seg, i) => ({ ...seg, color: colors[i % colors.length] }));
 }
 
 export function pickWinnerIndex(segments: WheelSegment[]): number {

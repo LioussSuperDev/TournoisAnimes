@@ -4,6 +4,7 @@ import { listUsagesForDuel } from "@/lib/db/queries/powerUsages";
 import { listPowersForUser } from "@/lib/db/queries/powers";
 import { listUsers } from "@/lib/db/queries/users";
 import { latestSpin, canRelaunch } from "@/lib/duel/spin";
+import { getVideoState } from "@/lib/realtime/videoSync";
 import type { WheelSegment } from "@/lib/wheel/segments";
 import { POWER_DEFINITIONS, type PowerType } from "@/lib/powers/registry";
 import { groups } from "@/lib/db/schema";
@@ -62,6 +63,8 @@ export async function buildPlayerDuelView(viewerUserId: string) {
       endingA,
       endingB,
       winnerEndingId: duel.winnerEndingId,
+      videoState:
+        duel.phase === "viewing" && duel.viewingStage !== "free" ? getVideoState(duel.id) : null,
     },
     myVote: myVote
       ? { endingId: myVote.endingId, validated: myVote.validated, doubleVoteActive: myVote.doubleVoteActive }

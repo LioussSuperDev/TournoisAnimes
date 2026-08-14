@@ -64,6 +64,10 @@ export async function recordPostWheelUsage(
   return row;
 }
 
+export async function deleteUsagesForDuel(duelId: string) {
+  await db.delete(powerUsages).where(eq(powerUsages.duelId, duelId));
+}
+
 export async function applyAllPending(duelId: string) {
   await db
     .update(powerUsages)
