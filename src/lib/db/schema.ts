@@ -18,7 +18,6 @@ export const users = sqliteTable(
     id: id(),
     username: text("username").notNull(),
     usernameLower: text("username_lower").notNull(),
-    passwordHash: text("password_hash").notNull(),
     role: text("role", { enum: ["player", "admin"] })
       .notNull()
       .default("player"),

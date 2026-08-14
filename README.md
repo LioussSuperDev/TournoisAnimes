@@ -9,7 +9,7 @@ Site privé de vote en temps réel pour un tournoi d'endings d'anime à 4 joueur
 - Next.js (App Router) + TypeScript + Tailwind CSS
 - Serveur custom (`server.ts`) qui attache Socket.io à Next.js pour la synchronisation temps réel
 - SQLite (module natif `node:sqlite`, aucune dépendance compilée) via Drizzle ORM
-- Sessions par cookie chiffré (`iron-session`), mots de passe hashés (`bcryptjs`)
+- Sessions par cookie chiffré (`iron-session`)
 
 ## Démarrage
 
@@ -30,7 +30,7 @@ Le terminal affiche l'URL locale et l'URL réseau (`http://<IP-de-ta-machine>:30
 
 ## Comptes
 
-Il n'y a pas de comptes pré-créés : chaque joueur va sur `/signup`, choisit son profil parmi les 4 noms autorisés (Liouss, ShadyOFF, Siaka, Serkcan) et choisit un mot de passe. Le compte `Serkcan` reçoit automatiquement le rôle admin. Les inscriptions sont limitées à ces 4 noms — personne d'autre ne peut créer de compte même s'il tombe sur l'URL du site.
+Pas de mot de passe : sur `/login`, chaque joueur clique sur son profil parmi les 4 noms autorisés (Liouss, ShadyOFF, Siaka, Serkcan) — le compte est créé automatiquement au premier clic, réutilisé ensuite. Le compte `Serkcan` reçoit automatiquement le rôle admin. Un profil déjà connecté (socket actif) devient grisé et indisponible pour les autres tant que son occupant ne s'est pas déconnecté ; ce grisage est synchronisé en temps réel. Seuls ces 4 noms sont sélectionnables — personne d'autre ne peut s'inscrire même en tombant sur l'URL du site.
 
 ## Données
 
@@ -47,12 +47,12 @@ Les fichiers audio ne sont pas fournis (voir `public/audio/README.md`) — ajout
 ```
 server.ts / src/server/main.ts   bootstrap Next.js + Socket.io, IP réseau au démarrage
 src/lib/db/                      schéma Drizzle, client SQLite, requêtes par domaine
-src/lib/auth/                    session, hashing, garde-fous d'accès (page + API)
+src/lib/auth/                    session, garde-fous d'accès (page + API)
 src/lib/realtime/                présence en ligne, notifications socket
 src/lib/powers/                  registre des pouvoirs (modulaire — voir ci-dessous)
 src/lib/wheel/                   construction des segments de la roue + tirage aléatoire serveur
 src/lib/duel/                    transitions de phase, logique de spin/relance
-src/app/(admin|tournoi|login|signup)/   pages
+src/app/(admin|tournoi|login)/   pages
 src/components/                  UI (admin/, tournoi/, wheel/, auth/)
 ```
 

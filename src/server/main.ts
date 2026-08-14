@@ -35,10 +35,11 @@ async function main() {
 
   io.on("connection", async (socket) => {
     const session = await sessionFromCookieHeader(socket.request.headers.cookie);
-    if (!session?.userId) {
-      socket.disconnect(true);
-      return;
-    }
+    // Logged-out visitors stay connected too — the profile picker needs
+    // live presence:update broadcasts before anyone has a session. They
+    // just don't get registered as "online" themselves.
+    if (!session?.userId) return;
+
     const userId = session.userId;
     markOnline(userId, socket.id);
     io.emit("presence:update");

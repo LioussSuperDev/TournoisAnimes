@@ -121,7 +121,7 @@ La première fois, une fenêtre Windows peut apparaître ("Le Pare-feu Windows D
 
 1. Assure-toi que **tous les appareils** (PC, téléphones...) des 4 joueurs sont connectés au **même Wi-Fi** que le PC qui héberge le site.
 2. Chaque joueur ouvre un navigateur (Chrome, Safari, Edge...) et tape l'adresse **"Réseau"** affichée dans le terminal, par exemple `http://192.168.1.42:3000` (le chiffre exact change selon ton réseau — regarde bien ce qui s'affiche chez toi).
-3. La première fois, chaque joueur clique sur son profil (Liouss / ShadyOFF / Siaka / Serkcan) et choisit un mot de passe (inscription). Les fois suivantes, il se reconnecte avec ce même mot de passe.
+3. Chaque joueur clique simplement sur son profil (Liouss / ShadyOFF / Siaka / Serkcan) — pas de mot de passe. Un profil déjà pris par quelqu'un de connecté apparaît grisé et ne peut pas être sélectionné par un autre, jusqu'à ce que cette personne se déconnecte.
 4. Le compte **Serkcan** reçoit automatiquement les droits administrateur.
 
 ---

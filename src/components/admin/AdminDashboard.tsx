@@ -11,7 +11,6 @@ import { LoserBracketPanel } from "./LoserBracketPanel";
 import { PoulainDorPanel } from "./PoulainDorPanel";
 import { HistoryPanel } from "./HistoryPanel";
 import { SnapshotsPanel } from "./SnapshotsPanel";
-import { AccountsPanel } from "./AccountsPanel";
 
 export function AdminDashboard() {
   const [groups, setGroups] = useState<Group[]>([]);
@@ -67,7 +66,6 @@ export function AdminDashboard() {
       <GroupsPanel groups={groups} onChanged={refresh} />
       <EndingsPanel groups={groups} endings={endings} onChanged={refresh} />
       <DuelsPanel groups={groups} endings={endings} duels={duels} onChanged={refresh} />
-      <AccountsPanel players={players} />
       <PowersPanel players={players} powers={powers} onChanged={refresh} />
       <LoserBracketPanel entries={loserBracket} players={players} />
       <PoulainDorPanel usages={poulainDor} />

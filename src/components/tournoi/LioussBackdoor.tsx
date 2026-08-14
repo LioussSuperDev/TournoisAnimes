@@ -6,19 +6,13 @@ import { useRouter } from "next/navigation";
 export function LioussBackdoor() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
+  async function confirm() {
     setError(null);
     setBusy(true);
-    const res = await fetch("/api/auth/elevate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password }),
-    });
+    const res = await fetch("/api/auth/elevate", { method: "POST" });
     setBusy(false);
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
@@ -26,7 +20,6 @@ export function LioussBackdoor() {
       return;
     }
     setOpen(false);
-    setPassword("");
     router.refresh();
   }
 
@@ -42,25 +35,14 @@ export function LioussBackdoor() {
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <form
-            onSubmit={submit}
-            className="w-full max-w-xs rounded-2xl border border-border bg-surface p-6 shadow-2xl space-y-4"
-          >
-            <p className="text-sm text-muted">Confirme ton mot de passe</p>
-            <input
-              type="password"
-              autoFocus
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg bg-surface-2 border border-border px-3 py-2 outline-none focus:border-accent"
-            />
+          <div className="w-full max-w-xs rounded-2xl border border-border bg-surface p-6 shadow-2xl space-y-4">
+            <p className="text-sm text-muted">Activer le mode admin pour cette session ?</p>
             {error && <p className="text-danger text-sm">{error}</p>}
             <div className="flex gap-2 justify-end">
               <button
                 type="button"
                 onClick={() => {
                   setOpen(false);
-                  setPassword("");
                   setError(null);
                 }}
                 className="rounded-lg px-3 py-1.5 text-sm text-muted hover:text-foreground"
@@ -68,14 +50,15 @@ export function LioussBackdoor() {
                 Annuler
               </button>
               <button
-                type="submit"
-                disabled={busy || !password}
+                type="button"
+                disabled={busy}
+                onClick={confirm}
                 className="rounded-lg bg-accent px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50"
               >
-                Valider
+                Confirmer
               </button>
             </div>
-          </form>
+          </div>
         </div>
       )}
     </>

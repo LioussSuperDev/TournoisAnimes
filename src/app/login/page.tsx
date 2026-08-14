@@ -1,36 +1,54 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { ProfileTiles } from "@/components/auth/ProfileTiles";
+import { getSocket, reconnectSocket } from "@/lib/realtime/client";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState<string | null>(null);
-  const [password, setPassword] = useState("");
+  const [onlineUsernames, setOnlineUsernames] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    if (!username) {
-      setError("Choisis ton profil.");
-      return;
+  useEffect(() => {
+    let cancelled = false;
+    async function refresh() {
+      const res = await fetch("/api/auth/profiles");
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!cancelled) {
+        setOnlineUsernames(
+          (data.profiles as { username: string; online: boolean }[])
+            .filter((p) => p.online)
+            .map((p) => p.username)
+        );
+      }
     }
-    setLoading(true);
-    const res = await fetch("/api/auth/login", {
+    refresh();
+    const socket = getSocket();
+    socket.on("presence:update", refresh);
+    return () => {
+      cancelled = true;
+      socket.off("presence:update", refresh);
+    };
+  }, []);
+
+  async function select(username: string) {
+    setError(null);
+    setBusy(true);
+    const res = await fetch("/api/auth/select", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ username }),
     });
     const data = await res.json();
-    setLoading(false);
+    setBusy(false);
     if (!res.ok) {
       setError(data.error ?? "Erreur inconnue.");
       return;
     }
+    reconnectSocket();
     router.push("/tournoi");
     router.refresh();
   }
@@ -41,36 +59,17 @@ export default function LoginPage() {
         <h1 className="text-2xl font-black tracking-tight text-center mb-1">
           TOURNOI ENDINGS ANIME
         </h1>
-        <p className="text-center text-muted mb-6">Connexion</p>
+        <p className="text-center text-muted mb-6">Choisis ton profil</p>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <ProfileTiles selected={username} onSelect={setUsername} />
+        <ProfileTiles
+          selected={null}
+          onSelect={select}
+          disabledUsernames={onlineUsernames}
+          disabledHint="Ce profil est déjà connecté par quelqu'un d'autre."
+        />
 
-          <input
-            type="password"
-            placeholder="Mot de passe"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg bg-surface-2 border border-border px-4 py-2.5 outline-none focus:border-accent"
-          />
-
-          {error && <p className="text-danger text-sm">{error}</p>}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-gradient-to-r from-accent to-accent-2 py-2.5 font-semibold text-white disabled:opacity-50"
-          >
-            {loading ? "Connexion..." : "Se connecter"}
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-muted mt-6">
-          Pas encore de compte ?{" "}
-          <Link href="/signup" className="text-accent-2 hover:underline">
-            Inscription
-          </Link>
-        </p>
+        {error && <p className="text-danger text-sm mt-4 text-center">{error}</p>}
+        {busy && <p className="text-muted text-sm mt-4 text-center">Connexion…</p>}
       </div>
     </main>
   );

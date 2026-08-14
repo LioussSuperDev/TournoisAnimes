@@ -19,22 +19,13 @@ export function listUsers() {
   return db.select().from(users).orderBy(users.createdAt).all();
 }
 
-export async function updateUserPasswordHash(id: string, passwordHash: string) {
-  const [user] = await db
-    .update(users)
-    .set({ passwordHash })
-    .where(eq(users.id, id))
-    .returning();
-  return user;
-}
-
-export async function createUser(username: string, passwordHash: string) {
+export async function createUser(username: string) {
   const usernameLower = username.trim().toLowerCase();
   const role = usernameLower === "serkcan" ? "admin" : "player";
 
   const [user] = await db
     .insert(users)
-    .values({ username: username.trim(), usernameLower, passwordHash, role })
+    .values({ username: username.trim(), usernameLower, role })
     .returning();
 
   await db.insert(playerPowers).values(
@@ -46,4 +37,13 @@ export async function createUser(username: string, passwordHash: string) {
   );
 
   return user;
+}
+
+/** Reuses the account if it already exists (its powers/history stay
+ * intact), otherwise provisions it — profiles are no longer created via a
+ * separate signup step, just picked. */
+export async function findOrCreateUser(username: string) {
+  const existing = await findUserByUsername(username);
+  if (existing) return existing;
+  return createUser(username);
 }
