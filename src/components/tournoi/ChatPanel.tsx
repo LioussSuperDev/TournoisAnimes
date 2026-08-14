@@ -68,7 +68,9 @@ export function ChatPanel() {
       <div ref={listRef} className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5 text-sm">
         {messages.map((m) => (
           <p key={m.id} className="break-words leading-snug">
-            <span className="font-semibold text-accent-2">{chatPrefix(m.username)}</span>
+            <span className="font-semibold text-accent-2">
+              {chatPrefix(m.username)} {m.username}
+            </span>
             <span className="text-muted">: </span>
             <span>{m.message}</span>
           </p>
