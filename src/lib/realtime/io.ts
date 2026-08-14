@@ -30,3 +30,17 @@ export function pingLoserBracket() {
 export function pingTournament() {
   getIO()?.emit("tournament:update");
 }
+
+export interface ChatMessagePayload {
+  id: number;
+  userId: string | null;
+  username: string | null;
+  message: string;
+  createdAt: string;
+}
+
+/** Broadcasts the new message directly rather than a "go refetch" ping —
+ * chat is high-frequency and every client just appends it locally. */
+export function broadcastChatMessage(message: ChatMessagePayload) {
+  getIO()?.emit("chat:message", message);
+}

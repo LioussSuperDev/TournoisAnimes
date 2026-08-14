@@ -171,6 +171,19 @@ export const tournamentSnapshots = sqliteTable("tournament_snapshots", {
   createdAt: createdAt(),
 });
 
+export const chatMessages = sqliteTable("chat_messages", {
+  // Plain autoincrement rather than the nanoid id() helper: createdAt only
+  // has second-level precision, so two quick messages can tie on
+  // timestamp — an autoincrementing id gives a sort key that's always
+  // insertion-order-stable, which matters a lot more for a chat log.
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id),
+  message: text("message").notNull(),
+  createdAt: createdAt(),
+});
+
 export const actionLog = sqliteTable("action_log", {
   id: id(),
   userId: text("user_id").references(() => users.id),

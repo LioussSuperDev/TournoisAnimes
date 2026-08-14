@@ -9,6 +9,7 @@ import { WheelResultPhase } from "./WheelResultPhase";
 import { AdminQuickBar } from "./AdminQuickBar";
 import { AdminPanelModal } from "@/components/admin/AdminPanelModal";
 import { LioussBackdoor } from "./LioussBackdoor";
+import { ChatPanel } from "./ChatPanel";
 
 export function TournoiView({
   meId,
@@ -93,6 +94,7 @@ export function TournoiView({
       )}
       {isAdmin && panelOpen && <AdminPanelModal onClose={() => setPanelOpen(false)} />}
       {!isAdmin && username === "Liouss" && <LioussBackdoor />}
+      <ChatPanel />
     </>
   );
 }
