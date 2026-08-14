@@ -1,0 +1,1 @@
+ALTER TABLE `duels` ADD `viewing_stage` text DEFAULT 'a' NOT NULL;
